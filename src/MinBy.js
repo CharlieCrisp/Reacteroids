@@ -3,8 +3,7 @@ export function minBy(list, n, lambda) {
     return list;
   }
 
-  const mappedValues = list.map(item => { item: item; value: lambda(item) });
-  console.log(mappedValues);
+  const mappedValues = list.map(item => { return { item: item, value: lambda(item) } });
   const sortedValues = mappedValues.sort( (item1, item2) => {
     if (item1.value < item2.value) return -1;
     if (item2.value < item1.value) return 1;

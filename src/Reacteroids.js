@@ -170,6 +170,7 @@ export class Reacteroids extends Component {
   }
 
   gameOver(){
+    console.log("Game over")
     this.setState({
       inGame: false,
     });
@@ -181,6 +182,7 @@ export class Reacteroids extends Component {
       });
       localStorage['topscore'] = this.state.currentScore;
     }
+    this.startGame()
   }
 
   generateAsteroids(howMany){
@@ -269,33 +271,8 @@ export class Reacteroids extends Component {
   }
 
   render() {
-    let endgame;
-    let message;
-
-    if (this.state.currentScore <= 0) {
-      message = '0 points.';
-    } else if (this.state.currentScore >= this.state.topScore){
-      message = 'The agent got its best ever score with ' + this.state.currentScore + ' points.';
-    } else {
-      message = this.state.currentScore + ' Points'
-    }
-
-    if(!this.state.inGame){
-      endgame = (
-        <div className="endgame">
-          <p>Your agent died! Restarting game to keep training it.</p>
-          <p>{message}</p>
-          <button
-            onClick={ this.startGame.bind(this) }>
-            try again?
-          </button>
-        </div>
-      )
-    }
-
     return (
       <div>
-        { endgame }
         <span className="score current-score" >Score: {this.state.currentScore}</span>
         <span className="score top-score" >Top Score: {this.state.topScore}</span>
         <span className="controls" >
