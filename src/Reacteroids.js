@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { KEY } from "./Keys";
 import Ship from './Ship';
 import Asteroid from './Asteroid';
 import Applauder from './Applauder';
@@ -57,21 +56,9 @@ export class Reacteroids extends Component {
     });
   }
 
-  takeAction(action) {
-    const keys = {
-      left: false,
-      right: false,
-      up: false,
-      space: false
-    }
-
-    if(action === KEY.LEFT ) keys.left = true;
-    if(action === KEY.RIGHT) keys.right = true;
-    if(action === KEY.UP) keys.up = true;
-    if(action === KEY.SPACE) keys.space = true;
-
+  takeAction(actions) {
     this.setState({
-      keys: keys
+      keys: actions
     })
   }
 
@@ -107,7 +94,7 @@ export class Reacteroids extends Component {
 
     
     this.timestep += 1
-    if (this.timestep % 5 == 0)  {
+    if (this.timestep % 3 == 0)  {
         if (this.state.inGame || !this.lastTimestepWasTerminal) {
           const isTerminal = !this.state.inGame;
           const lastReward = this.applause;
@@ -231,11 +218,12 @@ export class Reacteroids extends Component {
 
     const asteroids = minBy(this.asteroids, nNearestAsteroids, (asteroid) => {this.distanceTo(asteroid.position, ship.position)});
     var asteroidState = asteroids.flatMap(asteroid => [asteroid.position.x, asteroid.position.y, asteroid.velocity.x, asteroid.velocity.y]);
+
     const nPaddedAsteroidsRequired = nNearestAsteroids - asteroids.length
     for (var i = 0; i < nPaddedAsteroidsRequired; i++) {
-      asteroidState = asteroidState + asteroidPadding;
+      asteroidState = asteroidState.concat(asteroidPadding);
     }
-    return shipState + asteroidState;
+    return shipState.concat(asteroidState);
   }
 
   createObject(item, group){
@@ -325,6 +313,3 @@ export class Reacteroids extends Component {
     );
   }
 }
-/**
- * state is the nearest 20 x and y position and velocity values
- */
