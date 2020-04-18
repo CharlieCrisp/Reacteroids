@@ -5,6 +5,7 @@ import Applauder from './Applauder';
 import { randomNumBetweenExcluding } from './helpers';
 import RandomActor from "./RandomActor";
 import { minBy } from "./MinBy";
+import { KEY } from "./Keys";
 
 const shipPadding = [-1, -1, -1, -1, -1, -1];
 const asteroidPadding = [-1, -1, -1, -1];
@@ -30,7 +31,8 @@ export class Reacteroids extends Component {
       asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
-      inGame: false
+      inGame: false,
+      scores: []
     }
     this.ship = [];
     this.asteroids = [];
@@ -40,6 +42,7 @@ export class Reacteroids extends Component {
     this.timestep = 0;
     this.applause = 0;
     this.lastTimestepWasTerminal = false;
+    this.lastReset = new Date();
   }
 
   incrementScore(increment) {
@@ -74,8 +77,15 @@ export class Reacteroids extends Component {
     })
   }
 
+  handleKeys(value, e){
+    if (e.keyCode === KEY.ENTER) this.incrementScore(+1);
+    if (e.keyCode === KEY.SPACE) this.incrementScore(-1);
+  }
+
   componentDidMount() {
     window.addEventListener('resize',  this.handleResize.bind(this, false));
+    window.addEventListener('keydown', this.handleKeys.bind(this, true));
+    window.addEventListener('keyup', this.handleKeys.bind(this, true));
 
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
@@ -85,6 +95,8 @@ export class Reacteroids extends Component {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('keydown', this.handleKeys.bind(this, true));
+    window.removeEventListener('keyup', this.handleKeys.bind(this, true));
   }
 
   update() {
@@ -148,6 +160,9 @@ export class Reacteroids extends Component {
   }
 
   startGame(){
+    if (this.state.inGame) {
+      return
+    }
     this.setState({
       inGame: true,
       currentScore: 0,
@@ -170,9 +185,9 @@ export class Reacteroids extends Component {
   }
 
   gameOver(){
-    console.log("Game over")
     this.setState({
       inGame: false,
+      scores: this.state.scores.concat([this.state.currentScore])
     });
 
     // Replace top score
@@ -183,6 +198,7 @@ export class Reacteroids extends Component {
       localStorage['topscore'] = this.state.currentScore;
     }
     this.startGame()
+    console.log(this.state.scores)
   }
 
   generateAsteroids(howMany){
