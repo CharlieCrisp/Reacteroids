@@ -1,18 +1,15 @@
 import React, { Component } from 'react';
+import { KEY } from "./Keys";
 import Ship from './Ship';
 import Asteroid from './Asteroid';
 import Applauder from './Applauder';
-import { randomNumBetweenExcluding } from './helpers'
+import { randomNumBetweenExcluding } from './helpers';
+import RandomActor from "./RandomActor";
+import { minBy } from "./MinBy";
 
-const KEY = {
-  LEFT:  37,
-  RIGHT: 39,
-  UP: 38,
-  A: 65,
-  D: 68,
-  W: 87,
-  SPACE: 32
-};
+const shipPadding = [-1, -1, -1, -1, -1, -1];
+const asteroidPadding = [-1, -1, -1, -1];
+const nNearestAsteroids = 10;
 
 export class Reacteroids extends Component {
   constructor() {
@@ -40,10 +37,14 @@ export class Reacteroids extends Component {
     this.asteroids = [];
     this.bullets = [];
     this.particles = [];
+    this.randomActor = new RandomActor((action) => { this.takeAction(action) })
+    this.timestep = 0;
+    this.applause = 0;
+    this.lastTimestepWasTerminal = false;
   }
 
   recordApplause() {
-    console.log("You've recorded applause again")
+    this.applause += 1;
   }
 
   handleResize(value, e){
@@ -56,20 +57,37 @@ export class Reacteroids extends Component {
     });
   }
 
-  handleKeys(value, e){
-    let keys = this.state.keys;
-    if(e.keyCode === KEY.LEFT   || e.keyCode === KEY.A) keys.left  = value;
-    if(e.keyCode === KEY.RIGHT  || e.keyCode === KEY.D) keys.right = value;
-    if(e.keyCode === KEY.UP     || e.keyCode === KEY.W) keys.up    = value;
-    if(e.keyCode === KEY.SPACE) keys.space = value;
+  takeAction(action) {
+    const keys = {
+      left: false,
+      right: false,
+      up: false,
+      space: false
+    }
+
+    if(action === KEY.LEFT ) keys.left = true;
+    if(action === KEY.RIGHT) keys.right = true;
+    if(action === KEY.UP) keys.up = true;
+    if(action === KEY.SPACE) keys.space = true;
+
     this.setState({
-      keys : keys
-    });
+      keys: keys
+    })
+  }
+
+  resetRandomActorActions() {
+    const keys = {
+      left: false,
+      right: false,
+      up: false,
+      space: false
+    }
+    this.setState({
+      keys: keys
+    })
   }
 
   componentDidMount() {
-    window.addEventListener('keyup',   this.handleKeys.bind(this, false));
-    window.addEventListener('keydown', this.handleKeys.bind(this, true));
     window.addEventListener('resize',  this.handleResize.bind(this, false));
 
     const context = this.refs.canvas.getContext('2d');
@@ -79,8 +97,6 @@ export class Reacteroids extends Component {
   }
 
   componentWillUnmount() {
-    window.removeEventListener('keyup', this.handleKeys);
-    window.removeEventListener('keydown', this.handleKeys);
     window.removeEventListener('resize', this.handleResize);
   }
 
@@ -88,6 +104,21 @@ export class Reacteroids extends Component {
     const context = this.state.context;
     const keys = this.state.keys;
     const ship = this.ship[0];
+
+    
+    this.timestep += 1
+    if (this.timestep % 5 == 0)  {
+        if (this.state.inGame || !this.lastTimestepWasTerminal) {
+          const isTerminal = !this.state.inGame;
+          const lastReward = this.applause;
+          const currentState = this.getState();
+          this.randomActor.performAction(currentState, lastReward, isTerminal);
+
+          this.applause = 0;
+
+          this.lastTimestepWasTerminal = isTerminal
+      }
+    }
 
     context.save();
     context.scale(this.state.screen.ratio, this.state.screen.ratio);
@@ -182,6 +213,31 @@ export class Reacteroids extends Component {
     }
   }
 
+  distanceTo(firstThing, secondThing) {
+    const xDif = firstThing.x - secondThing.x;
+    const yDif = firstThing.y - secondThing.y;
+    return Math.pow(xDif, 2) + Math.pow(yDif, 2);
+  }
+
+  getState() {
+    const ship = this.ship[0];
+
+    let shipState;
+    if (ship) {
+      shipState = [ship.position.x,ship.position.y, ship.velocity.x, ship.velocity.y, ship.rotation, ship.rotationSpeed];
+    } else {
+      shipState = shipPadding;
+    }
+
+    const asteroids = minBy(this.asteroids, nNearestAsteroids, (asteroid) => {this.distanceTo(asteroid.position, ship.position)});
+    var asteroidState = asteroids.flatMap(asteroid => [asteroid.position.x, asteroid.position.y, asteroid.velocity.x, asteroid.velocity.y]);
+    const nPaddedAsteroidsRequired = nNearestAsteroids - asteroids.length
+    for (var i = 0; i < nPaddedAsteroidsRequired; i++) {
+      asteroidState = asteroidState + asteroidPadding;
+    }
+    return shipState + asteroidState;
+  }
+
   createObject(item, group){
     this[group].push(item);
   }
@@ -229,17 +285,17 @@ export class Reacteroids extends Component {
     let message;
 
     if (this.state.currentScore <= 0) {
-      message = '0 points... So sad.';
+      message = '0 points.';
     } else if (this.state.currentScore >= this.state.topScore){
-      message = 'Top score with ' + this.state.currentScore + ' points. Woo!';
+      message = 'The agent got its best ever score with ' + this.state.currentScore + ' points.';
     } else {
-      message = this.state.currentScore + ' Points though :)'
+      message = this.state.currentScore + ' Points'
     }
 
     if(!this.state.inGame){
       endgame = (
         <div className="endgame">
-          <p>Game over, man!</p>
+          <p>Your agent died! Restarting game to keep training it.</p>
           <p>{message}</p>
           <button
             onClick={ this.startGame.bind(this) }>
@@ -255,15 +311,20 @@ export class Reacteroids extends Component {
         <span className="score current-score" >Score: {this.state.currentScore}</span>
         <span className="score top-score" >Top Score: {this.state.topScore}</span>
         <span className="controls" >
-          Use [A][S][W][D] or [←][↑][↓][→] to MOVE<br/>
-          Use [SPACE] to SHOOT
+          Agent learns using [←][↑][↓][→] to MOVE<br/>
+          and [SPACE] to SHOOT.
+          Your job is to keep it alive by positive reinforcement.
+          Applaud when it does well!
         </span>
         <canvas ref="canvas"
           width={this.state.screen.width * this.state.screen.ratio}
           height={this.state.screen.height * this.state.screen.ratio}
         />
-        <Applauder recordApplause={this.recordApplause}/> 
+        <Applauder recordApplause={ () => this.recordApplause() }/> 
       </div>
     );
   }
 }
+/**
+ * state is the nearest 20 x and y position and velocity values
+ */
