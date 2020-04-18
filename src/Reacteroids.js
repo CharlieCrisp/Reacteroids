@@ -42,8 +42,8 @@ export class Reacteroids extends Component {
     this.lastTimestepWasTerminal = false;
   }
 
-  recordApplause() {
-    this.applause += 1;
+  incrementScore(increment) {
+    this.applause += increment;
   }
 
   handleResize(value, e){
@@ -299,16 +299,16 @@ export class Reacteroids extends Component {
         <span className="score current-score" >Score: {this.state.currentScore}</span>
         <span className="score top-score" >Top Score: {this.state.topScore}</span>
         <span className="controls" >
-          Agent learns using [←][↑][↓][→] to MOVE<br/>
-          and [SPACE] to SHOOT.
-          Your job is to keep it alive by positive reinforcement.
-          Applaud when it does well!
+          This agent is learning to navigate the environment.
+          Your job is to keep it alive by letting it know when it's doing well, and when it's doing badly. <br />
+          Applaud = ENTER <br />
+          Scold = SPACE <br />
         </span>
         <canvas ref="canvas"
           width={this.state.screen.width * this.state.screen.ratio}
           height={this.state.screen.height * this.state.screen.ratio}
         />
-        <Applauder recordApplause={ () => this.recordApplause() }/> 
+        <Applauder incrementScore={ (increment) => this.incrementScore(increment) }/> 
       </div>
     );
   }
