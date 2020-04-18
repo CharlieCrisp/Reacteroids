@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Ship from './Ship';
 import Asteroid from './Asteroid';
+import Applauder from './Applauder';
 import { randomNumBetweenExcluding } from './helpers'
 
 const KEY = {
@@ -39,6 +40,10 @@ export class Reacteroids extends Component {
     this.asteroids = [];
     this.bullets = [];
     this.particles = [];
+  }
+
+  recordApplause() {
+    console.log("You've recorded applause again")
   }
 
   handleResize(value, e){
@@ -257,6 +262,7 @@ export class Reacteroids extends Component {
           width={this.state.screen.width * this.state.screen.ratio}
           height={this.state.screen.height * this.state.screen.ratio}
         />
+        <Applauder recordApplause={this.recordApplause}/> 
       </div>
     );
   }
