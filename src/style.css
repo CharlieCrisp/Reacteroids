@@ -71,3 +71,7 @@ button:hover{
   z-index: 1;
   text-align: center;
 }
+a:link { color: #fff; }
+a:hover { color: #fff; }
+a:visited { color: #fff; }
+a:active { color: #fff; }

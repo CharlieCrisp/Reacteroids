@@ -53,6 +53,7 @@
   "dependencies": {
     "@tensorflow/tfjs": "^1.7.2",
     "react": "^0.14.0",
-    "react-dom": "^0.14.0"
+    "react-dom": "^0.14.0",
+    "surge": "^0.21.3"
   }
 }
