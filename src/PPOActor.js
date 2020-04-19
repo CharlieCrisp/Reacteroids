@@ -12,8 +12,12 @@ import {
 
 
 const epsilon = 0.2;
-const numEpochs = 10;
+const numEpochs = 50;
 const gamma = 0.97;
+const adamLR = 0.001;
+const beta1 = 0.9;
+const beta2 = 0.999;
+const entropyLossFactor = 0.05;
 
 function calculateFutureRewards(rewards, isTerminals) {
   var discounted_reward = 0;
@@ -29,6 +33,7 @@ function calculateFutureRewards(rewards, isTerminals) {
 }
 
 function surrogate(model, input, startingLogProbs, rewards) {
+  //TODO add baseline critic
   const logProbs = model(input);
   const ratios = logProbs.sub(startingLogProbs).exp();
 
@@ -38,9 +43,9 @@ function surrogate(model, input, startingLogProbs, rewards) {
   const secondTerm = oneMinusProbs.mul(oneMinusProbs.log(2))
   const entropy = firstTerm.neg().sub(secondTerm)
 
-  const clippedSurr = clipByValue(ratios, 1 - epsilon, 1 + epsilon).mul(rewards).neg().sum().asScalar()
+  const clippedSurr = clipByValue(ratios, 1 - epsilon, 1 + epsilon).mul(rewards).sum().neg().asScalar()
 
-  return clippedSurr.sub(entropy.sum().mul(0.05).asScalar());
+  return clippedSurr.sub(entropy.sum().mul(entropyLossFactor).asScalar());
 }
 
 export default class PPOActor {
@@ -50,7 +55,7 @@ export default class PPOActor {
     this.lastActions = null;
     this.lastState = null;
     this.gameModelTag = "PPOActor_" + gameModelTag;
-    this.optimiser = new AdamOptimizer(0.0008, 0.9, 0.999);
+    this.optimiser = new AdamOptimizer(adamLR, beta1, beta2);
     this.setUpNN();
   }
 
@@ -91,6 +96,7 @@ export default class PPOActor {
   }
   
   train() {
+    console.log("Updating model weights based on recent trajectories.")
     for (var i = 0; i < numEpochs; i++) {
       this.optimiser.minimize(() => {
         const input = tensor2d(this.memory.states);
@@ -151,12 +157,45 @@ class Memory {
     this.isTerminal = [];
   }
 
+
+  /**
+   * This function discounts
+   */
+  removeLastTrajectoryIfThereWereNoRewards() {
+    // Check terminal state of last trajectory.
+    if (this.rewards[this.length() - 1] != 0) {
+      return;
+    }
+
+    for (var i = this.length() - 2; i >= 0; i--) {
+      const reward = this.rewards[i];
+      const isTerminal = this.isTerminal[i];
+      if (reward != 0) {
+        // No need to clear trajectory, we've registered a reward
+        return;
+      }
+      if (isTerminal) {
+        // We've seen no rewards and we've reached the next trajectory
+        this.states = this.states.slice(0, i + 1);
+        this.actions = this.actions.slice(0, i + 1);
+        this.logProbs = this.logProbs.slice(0, i + 1);
+        this.rewards = this.rewards.slice(0, i + 1);
+        this.isTerminal = this.isTerminal.slice(0, i + 1);
+        return;
+      }
+    }
+  }
+
   recordHistory(state, action, logProb, reward, isTerminal) {
     this.states.push(state);
     this.actions.push(action);
     this.logProbs.push(logProb);
     this.rewards.push(reward);
     this.isTerminal.push(isTerminal);
+
+    if (isTerminal) {
+      removeLastTrajectoryIfThereWereNoRewards();
+    }
   }
 
   clearHistory() {
