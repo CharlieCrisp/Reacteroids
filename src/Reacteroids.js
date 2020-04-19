@@ -99,7 +99,6 @@ export class Reacteroids extends Component {
 
     if (this.ship.length > 1) {
       console.log("Found multiple ships, attempting to delete");
-      console.log(this.state);
       this.ship[1].destroy();
       this.ship = [ship];
     }
