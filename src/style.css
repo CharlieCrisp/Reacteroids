@@ -64,9 +64,17 @@ button:hover{
 }
 .applause-panel {
   position: absolute;
-  bottom: -15%;
+  bottom: 0%;
   left: 50%;
-  transform: translate(-50%, -80%);
+  transform: translate(-50%, 0%);
+  padding: 16px;
+  z-index: 1;
+  text-align: center;
+}
+.reset {
+  position: absolute;
+  bottom: 0%;
+  right: 0%;
   padding: 16px;
   z-index: 1;
   text-align: center;

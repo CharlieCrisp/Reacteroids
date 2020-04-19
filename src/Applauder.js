@@ -27,11 +27,13 @@ export default class Applauder extends Component {
       <div className="applause-panel">
         { message }
         <button onClick={ () => this.recordApplause() }>
-          Applaud
+          Applaud<br />
+          (ENTER)
         </button>
 
         <button onClick={ () => this.scoldAgent() }>
-          Scold
+          Scold<br />
+          (SPACE)
         </button>
       </div>
     )

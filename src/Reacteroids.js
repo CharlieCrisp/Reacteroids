@@ -7,6 +7,7 @@ import PPOActor from "./PPOActor";
 import { minBy } from "./MinBy";
 import { KEY } from "./Keys";
 import Graph from './Graph';
+import ResetButton from "./ResetButton";
 
 const shipPadding = [-1, -1, -1, -1, -1, -1];
 const asteroidPadding = [-1, -1, -1, -1];
@@ -94,6 +95,7 @@ export class Reacteroids extends Component {
     const ship = this.ship[0];
 
     if (this.ship.length > 1) {
+      console.log("Found multiple ships, attempting to delete")
       this.setState({
         ship: [ship]
       });
@@ -292,14 +294,13 @@ export class Reacteroids extends Component {
           This game environment was forked from <a href="https://github.com/chriz001/Reacteroids" target="_blank">chriz001/Reacteroids</a> on GitHub.<br />
           This agent is learning to navigate the environment.
           Your job is to keep it alive by letting it know when it's doing well, and when it's doing badly. <br />
-          Applaud = ENTER <br />
-          Scold = SPACE <br />
         </span>
         <canvas ref="canvas"
           width={this.state.screen.width * this.state.screen.ratio}
           height={this.state.screen.height * this.state.screen.ratio}
         />
         <Applauder incrementScore={ (increment) => this.incrementScore(increment) }/> 
+        <ResetButton />
       </div>
     );
   }
