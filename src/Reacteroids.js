@@ -3,9 +3,10 @@ import Ship from './Ship';
 import Asteroid from './Asteroid';
 import Applauder from './Applauder';
 import { randomNumBetweenExcluding } from './helpers';
-import RandomActor from "./RandomActor";
+import PPOActor from "./PPOActor";
 import { minBy } from "./MinBy";
 import { KEY } from "./Keys";
+import Graph from './Graph';
 
 const shipPadding = [-1, -1, -1, -1, -1, -1];
 const asteroidPadding = [-1, -1, -1, -1];
@@ -31,14 +32,14 @@ export class Reacteroids extends Component {
       asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
-      inGame: false,
-      scores: []
+      inGame: false
     }
     this.ship = [];
     this.asteroids = [];
     this.bullets = [];
     this.particles = [];
-    this.randomActor = new RandomActor((action) => { this.takeAction(action) })
+    this.ppoActor = new PPOActor((action) => { this.takeAction(action) }, "UserTrainedActor");
+    this.graph = new Graph(20, 20, "UserTrainedActor");
     this.timestep = 0;
     this.applause = 0;
     this.lastTimestepWasTerminal = false;
@@ -62,18 +63,6 @@ export class Reacteroids extends Component {
   takeAction(actions) {
     this.setState({
       keys: actions
-    })
-  }
-
-  resetRandomActorActions() {
-    const keys = {
-      left: false,
-      right: false,
-      up: false,
-      space: false
-    }
-    this.setState({
-      keys: keys
     })
   }
 
@@ -104,6 +93,12 @@ export class Reacteroids extends Component {
     const keys = this.state.keys;
     const ship = this.ship[0];
 
+    if (this.ship.length > 1) {
+      this.setState({
+        ship: [ship]
+      });
+    }
+
     
     this.timestep += 1
     if (this.timestep % 3 == 0)  {
@@ -111,7 +106,7 @@ export class Reacteroids extends Component {
           const isTerminal = !this.state.inGame;
           const lastReward = this.applause;
           const currentState = this.getState();
-          this.randomActor.performAction(currentState, lastReward, isTerminal);
+          this.ppoActor.performAction(currentState, lastReward, isTerminal);
 
           this.applause = 0;
 
@@ -144,6 +139,9 @@ export class Reacteroids extends Component {
     this.updateObjects(this.asteroids, 'asteroids')
     this.updateObjects(this.bullets, 'bullets')
     this.updateObjects(this.ship, 'ship')
+    if (this.graph) {
+      this.graph.render(this.state);
+    }
 
     context.restore();
 
@@ -184,10 +182,10 @@ export class Reacteroids extends Component {
     this.generateAsteroids(this.state.asteroidCount)
   }
 
-  gameOver(){
+  gameOver() {
+    this.graph.addScore(this.state.currentScore);
     this.setState({
-      inGame: false,
-      scores: this.state.scores.concat([this.state.currentScore])
+      inGame: false
     });
 
     // Replace top score
@@ -198,7 +196,6 @@ export class Reacteroids extends Component {
       localStorage['topscore'] = this.state.currentScore;
     }
     this.startGame()
-    console.log(this.state.scores)
   }
 
   generateAsteroids(howMany){

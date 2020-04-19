@@ -34,24 +34,32 @@ function surrogate(model, input, startingLogProbs, rewards) {
   return clipByValue(ratios, 1 - epsilon, 1 + epsilon).mul(rewards).neg().sum().asScalar();
 }
 
-/**
- * This class can be extended to be an actor that acts based of an NN policy.
- */
-export default class RandomActor {
-  constructor(takeAction) {
+export default class PPOActor {
+  constructor(takeAction, gameModelTag) {
     this.takeAction = takeAction;
     this.memory = new Memory();
     this.lastActions = null;
     this.lastState = null;
+    this.gameModelTag = "PPOActor_" + gameModelTag;
     this.optimiser = new AdamOptimizer(0.0008, 0.9, 0.999);
     this.setUpNN();
   }
 
   setUpNN() {
-    this.w1 = variable(randomNormal([10 * 4 + 6, 32]));
-    this.b1 = variable(randomNormal([32]));
-    this.w2 = variable(randomNormal([32, 4]));
-    this.b2 = variable(randomNormal([4]));
+    const savedModel = localStorage.getItem(this.gameModelTag);
+    if (savedModel != null) {
+      const model = JSON.parse(savedModel)
+      this.w1 = variable(tensor2d(model.w1, [10 * 4 + 6, 32]));
+      this.b1 = variable(tensor1d(model.b1));
+      this.w2 = variable(tensor2d(model.w2, [32, 4]));
+      this.b2 = variable(tensor1d(model.b2));
+      console.log("Loaded saved model from localstorage");
+    } else {
+      this.w1 = variable(randomNormal([10 * 4 + 6, 32]));
+      this.b1 = variable(randomNormal([32]));
+      this.w2 = variable(randomNormal([32, 4]));
+      this.b2 = variable(randomNormal([4]));
+    }
   }
 
   model(x, train) {
@@ -84,6 +92,7 @@ export default class RandomActor {
         return surr;
       })
     }
+    this.saveState()
   }
   
 
@@ -110,6 +119,17 @@ export default class RandomActor {
     }
     this.lastState = currentState;
     this.lastActions = actions;
+  }
+
+  saveState() {
+    const gameModelWeights = {
+      b1: this.b1.arraySync(),
+      b2: this.b2.arraySync(),
+      w1: this.w1.flatten().arraySync(),
+      w2: this.w2.flatten().arraySync()
+    }
+
+    localStorage.setItem(this.gameModelTag, JSON.stringify(gameModelWeights));
   }
 }
 
