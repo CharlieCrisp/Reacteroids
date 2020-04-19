@@ -31,7 +31,16 @@ function calculateFutureRewards(rewards, isTerminals) {
 function surrogate(model, input, startingLogProbs, rewards) {
   const logProbs = model(input);
   const ratios = logProbs.sub(startingLogProbs).exp();
-  return clipByValue(ratios, 1 - epsilon, 1 + epsilon).mul(rewards).neg().sum().asScalar();
+
+  const probs = logProbs.exp()
+  const oneMinusProbs = logProbs.neg().add(1)
+  const firstTerm = probs.mul(probs.log(2))
+  const secondTerm = oneMinusProbs.mul(oneMinusProbs.log(2))
+  const entropy = firstTerm.neg().sub(secondTerm)
+
+  const clippedSurr = clipByValue(ratios, 1 - epsilon, 1 + epsilon).mul(rewards).neg().sum().asScalar()
+
+  return clippedSurr.sub(entropy.sum().mul(0.05).asScalar());
 }
 
 export default class PPOActor {

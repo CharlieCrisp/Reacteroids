@@ -110,8 +110,9 @@ export class Reacteroids extends Component {
         if (this.state.inGame || !this.lastTimestepWasTerminal) {
           const isTerminal = !this.state.inGame;
           const lastReward = this.gameMode == GAME_REWARD_MODE.APPLAUSE ? this.applause : this.recentPoints;
+          const terminalDiscount = isTerminal ? -50 : 0
           const currentState = this.getState();
-          this.ppoActor.performAction(currentState, lastReward, isTerminal);
+          this.ppoActor.performAction(currentState, lastReward + terminalDiscount, isTerminal);
 
           this.applause = 0;
           this.recentPoints = 0;
