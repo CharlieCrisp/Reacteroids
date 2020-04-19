@@ -64,7 +64,7 @@ export default class Graph {
     context.moveTo(this.bottomLeft.x, 0);
     context.beginPath();
 
-    for (var i = 0; i < this.scores.length; i++) {
+    for (var i = this.scores.length - 100; i < this.scores.length; i++) {
       const y = (this.scores[i] / yMax) * this.graphHeight + this.bottomLeft.y;
       const x = (i / (this.scores.length - 1)) * this.graphWidth + this.bottomLeft.x;
       context.lineTo(x, height - y);
