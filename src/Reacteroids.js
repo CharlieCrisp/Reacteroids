@@ -6,7 +6,7 @@ import { randomNumBetweenExcluding } from './helpers';
 import PPOActor from "./PPOActor";
 import { minBy } from "./MinBy";
 import { KEY } from "./Keys";
-import Graph from './Graph';
+import Graph, { GraphLabels } from './Graph';
 import ResetButton from "./ResetButton";
 
 const shipPadding = [-1, -1, -1, -1, -1, -1];
@@ -40,7 +40,7 @@ export class Reacteroids extends Component {
     this.bullets = [];
     this.particles = [];
     this.ppoActor = new PPOActor((action) => { this.takeAction(action) }, "UserTrainedActor");
-    this.graph = new Graph(20, 20, "UserTrainedActor");
+    this.graph = new Graph(70, 40, "UserTrainedActor");
     this.timestep = 0;
     this.applause = 0;
     this.lastTimestepWasTerminal = false;
@@ -95,7 +95,9 @@ export class Reacteroids extends Component {
     const ship = this.ship[0];
 
     if (this.ship.length > 1) {
-      console.log("Found multiple ships, attempting to delete")
+      console.log("Found multiple ships, attempting to delete");
+      console.log(this.state);
+      this.state[1].destroy();
       this.setState({
         ship: [ship]
       });
@@ -300,6 +302,7 @@ export class Reacteroids extends Component {
           height={this.state.screen.height * this.state.screen.ratio}
         />
         <Applauder incrementScore={ (increment) => this.incrementScore(increment) }/> 
+        <GraphLabels />
         <ResetButton />
       </div>
     );

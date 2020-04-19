@@ -1,6 +1,12 @@
 import React from 'react';
 import { render } from 'react-dom';
-import { Reacteroids } from './Reacteroids';
+import App from "./App";
 import style from './style.css';
+import { BrowserRouter } from 'react-router-dom';
 
-render(<Reacteroids />, document.getElementById('root'));
+render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>, 
+  document.getElementById('root')
+);

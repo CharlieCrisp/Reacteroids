@@ -1,3 +1,5 @@
+import React, { Component } from "react";
+
 export default class Graph {
   constructor(x, y, graphStateTag) {
     this.graphHeight = 200;
@@ -74,7 +76,7 @@ export default class Graph {
     context.restore();
   }
 
-  render(state){
+  render(state) {
     // Draw
     this.drawLine(state, this.bottomLeft, this.topLeft);
     this.drawLine(state, this.bottomLeft, this.bottomRight);
@@ -84,5 +86,16 @@ export default class Graph {
 
   saveState() {
     localStorage.setItem(this.graphStateTag, JSON.stringify(this.scores));
+  }
+}
+
+export class GraphLabels extends Component {
+  render() {
+    return (
+      <div>
+        <div className="xaxis">Time</div>
+        <div className="yaxis">Score</div>
+      </div>
+    )
   }
 }

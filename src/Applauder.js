@@ -18,14 +18,8 @@ export default class Applauder extends Component {
 
 
   render() {
-    const message = <p>
-      This agent is being trained using only your encouragement.
-      Encourage the agent by applauding it when it does well and scolding it when it's doing badly.
-    </p>
-
     return (
       <div className="applause-panel">
-        { message }
         <button onClick={ () => this.recordApplause() }>
           Applaud<br />
           (ENTER)
