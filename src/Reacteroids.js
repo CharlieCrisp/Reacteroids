@@ -1,21 +1,23 @@
 import React, { Component } from 'react';
 import Ship from './Ship';
 import Asteroid from './Asteroid';
-import Applauder from './Applauder';
+import Controls from './Controls';
 import { randomNumBetweenExcluding } from './helpers';
 import PPOActor from "./PPOActor";
 import { minBy } from "./MinBy";
 import { KEY } from "./Keys";
 import Graph, { GraphLabels } from './Graph';
 import ResetButton from "./ResetButton";
+import { GAME_REWARD_MODE } from './GameRewardMode';
 
 const shipPadding = [-1, -1, -1, -1, -1, -1];
 const asteroidPadding = [-1, -1, -1, -1];
 const nNearestAsteroids = 10;
 
 export class Reacteroids extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+    this.gameMode = props.gameMode;
     this.state = {
       screen: {
         width: window.innerWidth,
@@ -39,8 +41,8 @@ export class Reacteroids extends Component {
     this.asteroids = [];
     this.bullets = [];
     this.particles = [];
-    this.ppoActor = new PPOActor((action) => { this.takeAction(action) }, "UserTrainedActor");
-    this.graph = new Graph(70, 40, "UserTrainedActor");
+    this.ppoActor = new PPOActor((action) => { this.takeAction(action) }, this.gameMode);
+    this.graph = new Graph(70, 40, this.gameMode);
     this.timestep = 0;
     this.applause = 0;
     this.lastTimestepWasTerminal = false;
@@ -97,10 +99,8 @@ export class Reacteroids extends Component {
     if (this.ship.length > 1) {
       console.log("Found multiple ships, attempting to delete");
       console.log(this.state);
-      this.state[1].destroy();
-      this.setState({
-        ship: [ship]
-      });
+      this.ship[1].destroy();
+      this.ship = [ship];
     }
 
     
@@ -288,22 +288,25 @@ export class Reacteroids extends Component {
   }
 
   render() {
+    const message = this.gameMode == GAME_REWARD_MODE.APPLAUSE ?
+      "This agent is learning to navigate the environment. Your job is to keep it alive by letting it know when it's doing well, and when it's doing badly." :
+      "This agent is learning to play using the actual game score, not your applause. Is the agent doing better without you?";
+
     return (
       <div>
         <span className="score current-score" >Score: {this.state.currentScore}</span>
         <span className="score top-score" >Top Score: {this.state.topScore}</span>
         <span className="controls" >
           This game environment was forked from <a href="https://github.com/chriz001/Reacteroids" target="_blank">chriz001/Reacteroids</a> on GitHub.<br />
-          This agent is learning to navigate the environment.
-          Your job is to keep it alive by letting it know when it's doing well, and when it's doing badly. <br />
+          {message}
         </span>
         <canvas ref="canvas"
           width={this.state.screen.width * this.state.screen.ratio}
           height={this.state.screen.height * this.state.screen.ratio}
         />
-        <Applauder incrementScore={ (increment) => this.incrementScore(increment) }/> 
+        <Controls incrementScore={ (increment) => this.incrementScore(increment) } gameMode={this.gameMode}/> 
         <GraphLabels />
-        <ResetButton />
+        <ResetButton gameMode={this.gameMode}/>
       </div>
     );
   }

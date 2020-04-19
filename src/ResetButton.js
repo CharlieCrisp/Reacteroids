@@ -1,9 +1,13 @@
 import React, { Component } from "react";
 
 export default class ResetButton extends Component {
+  constructor(props) {
+    super(props);
+    this.gameMode = props.gameMode
+  }
   resetLocalStorage() {
-    localStorage.removeItem("PPOActor_UserTrainedActor");
-    localStorage.removeItem("GraphScores_UserTrainedActor");
+    localStorage.removeItem("PPOActor_" + this.gameMode);
+    localStorage.removeItem("GraphScores_" + this.gameMode);
     location.reload();
   }
 
