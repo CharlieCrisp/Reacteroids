@@ -101,7 +101,7 @@ export default class PPOActor {
     const [left, right, up, space] = actions
     this.recordActions(currentState, actions, logProbs, lastApplause, isTerminal);
 
-    if (this.memory.length() > 100) {
+    if (isTerminal && this.memory.length() > 100) {
       this.train();
       this.memory.clearHistory();
     }

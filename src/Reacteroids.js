@@ -45,6 +45,7 @@ export class Reacteroids extends Component {
     this.graph = new Graph(70, 40, this.gameMode);
     this.timestep = 0;
     this.applause = 0;
+    this.recentPoints = 0;
     this.lastTimestepWasTerminal = false;
     this.lastReset = new Date();
   }
@@ -108,11 +109,12 @@ export class Reacteroids extends Component {
     if (this.timestep % 3 == 0)  {
         if (this.state.inGame || !this.lastTimestepWasTerminal) {
           const isTerminal = !this.state.inGame;
-          const lastReward = this.applause;
+          const lastReward = this.gameMode == GAME_REWARD_MODE.APPLAUSE ? this.applause : this.recentPoints;
           const currentState = this.getState();
           this.ppoActor.performAction(currentState, lastReward, isTerminal);
 
           this.applause = 0;
+          this.recentPoints = 0;
 
           this.lastTimestepWasTerminal = isTerminal
       }
@@ -159,6 +161,7 @@ export class Reacteroids extends Component {
         currentScore: this.state.currentScore + points,
       });
     }
+    this.recentPoints += points;
   }
 
   startGame(){
